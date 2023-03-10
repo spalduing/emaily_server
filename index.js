@@ -1,9 +1,30 @@
 const express = require("express");
-const app = express();
+const passport = require("passport");
+const GoogleStrategy = require("passport-google-oauth20").Strategy;
 
-app.get("/", (req, res) => {
-  res.send({ hi: "there" });
-});
+const { googleClientID, googleClientSecret } = require("./config/keys");
+
+const app = express();
+// console.developers.google.com
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: googleClientID,
+      clientSecret: googleClientSecret,
+      callbackURL: "/auth/google/callback",
+    },
+    (accessToken) => {
+      console.log(accessToken);
+    }
+  )
+);
+
+app.get(
+  "/auth/google",
+  passport.authenticate("google", {
+    scope: ["profile", "email"],
+  })
+);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT);
