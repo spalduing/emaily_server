@@ -1,8 +1,11 @@
 const express = require("express");
+const mongoose = require("mongoose");
 
 require("./services/passport");
 const authRoutes = require("./routes/authRoutes");
+const { mongoURI } = require("./config/keys");
 
+mongoose.connect(mongoURI);
 const app = express();
 app.set("trust proxy", 1);
 authRoutes(app);
