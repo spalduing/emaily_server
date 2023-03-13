@@ -8,6 +8,11 @@ const User = mongoose.model("users");
 
 // console.developers.google.com
 
+// passport.serializeUser((user, done) => {
+//   console.log(user.id);
+//   done(null, user.id);
+// });
+
 module.exports = (app) => {
   passport.use(
     new GoogleStrategy(
