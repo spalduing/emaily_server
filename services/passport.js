@@ -1,7 +1,10 @@
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
+const mongoose = require("mongoose");
 
 const { googleClientID, googleClientSecret } = require("../config/keys");
+
+const User = mongoose.model("users");
 
 // console.developers.google.com
 passport.use(
@@ -16,6 +19,8 @@ passport.use(
       console.log("accessToken:", accessToken);
       console.log("refreshToken:", refreshToken);
       console.log("profile:", profile);
+
+      new User({ googleId: profile.id }).save();
     }
   )
 );
