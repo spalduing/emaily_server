@@ -15,12 +15,18 @@ passport.use(
       callbackURL: "http://localhost:5000/auth/google/callback",
       userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo",
     },
-    (accessToken, refreshToken, profile, done) => {
+    async (accessToken, refreshToken, profile, done) => {
       console.log("accessToken:", accessToken);
       console.log("refreshToken:", refreshToken);
       console.log("profile:", profile);
 
-      new User({ googleId: profile.id }).save();
+      const userExist = await User.findOne({ googleId: profile.id });
+
+      if (!userExist) {
+        new User({ googleId: profile.id }).save();
+      } else {
+        console.log("This user is created already!");
+      }
     }
   )
 );
