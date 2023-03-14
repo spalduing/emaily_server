@@ -6,14 +6,17 @@ const { googleClientID, googleClientSecret } = require("../config/keys");
 
 const User = mongoose.model("users");
 
-// console.developers.google.com
-
-// passport.serializeUser((user, done) => {
-//   console.log(user.id);
-//   done(null, user.id);
-// });
-
 module.exports = (app) => {
+  passport.serializeUser((user, done) => {
+    done(null, user.id);
+  });
+  passport.deserializeUser((id, done) => {
+    User.findById(id).then((user) => {
+      done(null, user);
+    });
+  });
+
+  // console.developers.google.com
   passport.use(
     new GoogleStrategy(
       {
@@ -41,4 +44,5 @@ module.exports = (app) => {
     )
   );
   app.use(passport.initialize());
+  app.use(passport.session());
 };
