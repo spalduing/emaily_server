@@ -22,7 +22,9 @@ module.exports = (app) => {
       {
         clientID: googleClientID,
         clientSecret: googleClientSecret,
-        callbackURL: "http://localhost:5000/auth/google/callback",
+        // callbackURL: "http://localhost:5000/auth/google/callback",
+        proxy: true,
+        callbackURL: "/auth/google/callback",
         userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo",
       },
       async (accessToken, refreshToken, profile, done) => {
@@ -33,7 +35,7 @@ module.exports = (app) => {
         const user = await User.findOne({ googleId: profile.id });
 
         if (!user) {
-          const newUser = await new User({ googleId: profile.id })
+          await new User({ googleId: profile.id })
             .save()
             .then((user) => done(null, user));
         } else {
