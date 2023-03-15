@@ -35,13 +35,11 @@ module.exports = (app) => {
         const user = await User.findOne({ googleId: profile.id });
 
         if (!user) {
-          await new User({ googleId: profile.id })
-            .save()
-            .then((user) => done(null, user));
-        } else {
-          console.log("This user is created already!");
-          done(null, user);
+          const newUser = await new User({ googleId: profile.id }).save();
+          return done(null, newUser);
         }
+        console.log("This user is created already!");
+        done(null, user);
       }
     )
   );
