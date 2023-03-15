@@ -9,6 +9,9 @@
   },
   "scripts": {
     "start": "node index.js",
+    "server": "nodemon index.js",
+    "client": "npm run start --prefix client",
+    "_dev": "concurrently \"npm run server\" \"npm run client\"",
     "dev": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -16,6 +19,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "concurrently": "^3.5.0",
     "cookie-session": "^2.0.0",
     "express": "^4.18.2",
     "mongoose": "^5.9.15",
