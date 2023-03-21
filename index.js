@@ -13,6 +13,7 @@ const { mongoURI, cookieKey } = require("./config/keys");
 mongoose.connect(mongoURI);
 const app = express();
 app.set("trust proxy", 1);
+
 app.use(bodyParser.json());
 app.use(
   cookieSession({
