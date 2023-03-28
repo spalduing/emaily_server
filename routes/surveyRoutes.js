@@ -15,7 +15,6 @@ module.exports = (app) => {
     res.send(surveys);
   });
 
-  // app.post("/api/surveys", async (req, res) => {
   app.post("/api/surveys", requireLogin, requireCredits, async (req, res) => {
     const { title, subject, body, recipients } = req.body;
     const recipientArray = parseRecipients(recipients);
@@ -28,15 +27,21 @@ module.exports = (app) => {
       dateSent: Date.now(),
       _user: req.user.id,
     });
-    // .save();
-    // res.send(survey);
 
     const mailer = new Mailer(survey, surveyTemplate(survey));
-    const mail = await mailer.send();
 
-    console.log(survey);
-    console.log(mail);
+    try {
+      const mail = await mailer.send();
+      await survey.save();
+      req.user.credits -= 1;
+      const user = await req.user.save();
 
-    res.send(recipientArray);
+      console.log(survey);
+      console.log(mail);
+
+      res.send(user);
+    } catch (error) {
+      res.status(422).send(error);
+    }
   });
 };
