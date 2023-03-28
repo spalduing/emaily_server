@@ -14,6 +14,9 @@ module.exports = (app) => {
 
     res.send(surveys);
   });
+  app.get("/api/surveys/thanks", requireLogin, async (req, res) => {
+    res.send("Thanks for voting!");
+  });
 
   app.post("/api/surveys", requireLogin, requireCredits, async (req, res) => {
     const { title, subject, body, recipients } = req.body;
@@ -43,5 +46,10 @@ module.exports = (app) => {
     } catch (error) {
       res.status(422).send(error);
     }
+  });
+
+  app.post("/api/surveys/webhooks", async (req, res) => {
+    console.log(req.body);
+    res.send({});
   });
 };
