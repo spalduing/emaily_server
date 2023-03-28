@@ -1,4 +1,9 @@
 const mongoose = require("mongoose");
+const map = require("lodash/map");
+const compact = require("lodash/compact");
+const uniqBy = require("lodash/uniqBy");
+const Path = require("path-parser");
+const { URL } = require("url");
 
 const requireLogin = require("../middlewares/requireLogin");
 const requireCredits = require("../middlewares/requireCredits");
@@ -14,7 +19,7 @@ module.exports = (app) => {
 
     res.send(surveys);
   });
-  app.get("/api/surveys/thanks", requireLogin, async (req, res) => {
+  app.get("/api/surveys/:surveyId/:choice", requireLogin, async (req, res) => {
     res.send("Thanks for voting!");
   });
 
@@ -50,6 +55,22 @@ module.exports = (app) => {
 
   app.post("/api/surveys/webhooks", async (req, res) => {
     console.log(req.body);
+    const path = new Path("api/surveys/:surveyId/:choice");
+
+    const events = map(req.body, ({ email, url }) => {
+      const pathName = new URL(url).pathname;
+      const match = path.test(pathName);
+      // console.log(match);
+      if (match) {
+        return { email, ...match };
+      }
+    });
+
+    // console.log(events);
+    const compactEvents = compact(events);
+    const uniqueEvents = uniqBy(compactEvents, "email", "surveyId");
+    console.log(uniqueEvents);
+
     res.send({});
   });
 };
