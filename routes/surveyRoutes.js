@@ -16,15 +16,21 @@ const surveyTemplate = require("../services/email_templates/surveyTemplate");
 const Survey = mongoose.model("surveys");
 
 module.exports = (app) => {
+  // GET
   app.get("/api/surveys", requireLogin, async (req, res) => {
-    const surveys = await Survey.findAll();
+    const surveys = await Survey.find({ _user: req.user.id }).select({
+      recipients: false,
+    });
 
     res.send(surveys);
   });
+
+  // GET
   app.get("/api/surveys/:surveyId/:choice", requireLogin, async (req, res) => {
     res.send("Thanks for voting!");
   });
 
+  // POST
   app.post("/api/surveys", requireLogin, requireCredits, async (req, res) => {
     const { title, subject, body, recipients } = req.body;
     const recipientArray = parseRecipients(recipients);
@@ -52,6 +58,7 @@ module.exports = (app) => {
     }
   });
 
+  // POST
   app.post("/api/surveys/webhooks", async (req, res) => {
     const path = new Path("/api/surveys/:surveyId/:choice"); // Be careful with the api URI
     const clickEvents = req.body.filter((event) => event.event === "click");
