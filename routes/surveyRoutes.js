@@ -1,9 +1,11 @@
+const _ = require("lodash");
 const mongoose = require("mongoose");
-const map = require("lodash/map");
-const compact = require("lodash/compact");
-const uniqBy = require("lodash/uniqBy");
 const Path = require("path-parser");
 const { URL } = require("url");
+// const chain = require("lodash/chain");
+// const map = require("lodash/map");
+// const compact = require("lodash/compact");
+// const uniqBy = require("lodash/uniqBy");
 
 const requireLogin = require("../middlewares/requireLogin");
 const requireCredits = require("../middlewares/requireCredits");
@@ -44,9 +46,6 @@ module.exports = (app) => {
       req.user.credits -= 1;
       const user = await req.user.save();
 
-      console.log(survey);
-      console.log(mail);
-
       res.send(user);
     } catch (error) {
       res.status(422).send(error);
@@ -54,22 +53,42 @@ module.exports = (app) => {
   });
 
   app.post("/api/surveys/webhooks", async (req, res) => {
-    console.log(req.body);
-    const path = new Path("api/surveys/:surveyId/:choice");
+    const path = new Path("/api/surveys/:surveyId/:choice"); // Be careful with the api URI
+    const clickEvents = req.body.filter((event) => event.event === "click");
 
-    const events = map(req.body, ({ email, url }) => {
-      const pathName = new URL(url).pathname;
-      const match = path.test(pathName);
-      // console.log(match);
-      if (match) {
-        return { email, ...match };
-      }
-    });
+    const events = _.chain(clickEvents)
+      .map(({ email, url }) => {
+        const match = path.test(new URL(url).pathname);
 
-    // console.log(events);
-    const compactEvents = compact(events);
-    const uniqueEvents = uniqBy(compactEvents, "email", "surveyId");
-    console.log(uniqueEvents);
+        if (match) {
+          return { email, ...match };
+        }
+      })
+      .compact()
+      .uniqBy("email", "surveyId")
+      // since we're making an async request to mongo, would be normal to put async await
+      // but since this endpoint is receiving stuff from Sendgrid, this service doesn't care
+      // and it's not expecting for us to responds anything, so it doesn't matter if we send an
+      // immediate response  while the mongo request gets processed.
+      // .each(async ({ surveyId, email, choice }) => {
+      .each((event) => {
+        const { surveyId, email, choice } = event;
+
+        Survey.updateOne(
+          {
+            _id: surveyId,
+            recipients: {
+              $elemMatch: { email, responded: false }, // be careful with the $ decorators
+            },
+          },
+          {
+            $inc: { [choice]: 1 },
+            $set: { "recipients.$.responded": true },
+            lastResponded: new Date(),
+          }
+        ).exec();
+      })
+      .value();
 
     res.send({});
   });
